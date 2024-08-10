@@ -19,22 +19,5 @@ model_dir = snapshot_download("AI-ModelScope/bge-small-zh-v1.5", cache_dir='.')
 from modelscope import snapshot_download
 model_dir = snapshot_download('IEITYuan/Yuan2-2B-Mars-hf', cache_dir='.')
 ```
-
-<!-- 运行
-```Shell
-streamlit run app.py
-```
 ---
-使用说明
-- 打开浏览器，输入 http://localhost:8501/ 访问系统
-- 登录系统，输入用户名和密码
-- 上传需要评分的作业文件
-- 选择需要评分的考试类型
-- 选择需要评分的评分标准
-- 点击开始评分按钮，系统开始自动评分
-- 系统会自动生成评分结果，并显示在页面上
-- 点击下载按钮，可以下载评分结果文件
----
-系统架构
-- 前端：使用streamlit构建的web页面，负责用户交互和显示
-- 后端：使用Flask构建的后端服务，负责接收用户上传的作业文件，并调用模型进行评分 -->
+<!-- # 启动服务 -->
