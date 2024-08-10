@@ -62,7 +62,7 @@ class VectorStoreIndex:
         result = np.array([self.get_similarity(question_vector, vector) for vector in self.vectors])
         return np.array(self.documents)[result.argsort()[-k:][::-1]].tolist() 
 print("> Create index...")
-doecment_path = './knowledge.txt'
+doecment_path = './code/knowledge.txt'
 index = VectorStoreIndex(doecment_path, embed_model)
 question = '介绍一下广州大学'
 print('> Question:', question)
