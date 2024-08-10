@@ -1,107 +1,107 @@
-# 导入所需的库
+import streamlit as st
+from transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM
+import torch
 from typing import List
 import numpy as np
 
-import torch
-from transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM
+# 设置标题和描述
+st.title("💬 Yuan2.0 智能编程助手")
+st.write("一个结合了 RAG（检索增强生成）的智能问答系统。")
+
+# 定义模型路径和数据类型
+model_path = './IEITYuan/Yuan2-2B-Mars-hf'
+torch_dtype = torch.bfloat16 # A10
+
 # 定义向量模型类
 class EmbeddingModel:
-    """
-    class for EmbeddingModel
-    """
-
     def __init__(self, path: str) -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(path)
-
         self.model = AutoModel.from_pretrained(path).cuda()
-        print(f'Loading EmbeddingModel from {path}.')
-
-    def get_embeddings(self, texts: List) -> List[float]:
-        """
-        calculate embedding for text list
-        """
+    
+    def get_embeddings(self, texts: List[str]) -> List[List[float]]:
         encoded_input = self.tokenizer(texts, padding=True, truncation=True, return_tensors='pt')
         encoded_input = {k: v.cuda() for k, v in encoded_input.items()}
         with torch.no_grad():
             model_output = self.model(**encoded_input)
             sentence_embeddings = model_output[0][:, 0]
         sentence_embeddings = torch.nn.functional.normalize(sentence_embeddings, p=2, dim=1)
-        return sentence_embeddings.tolist()
-print("> Create embedding model...")
-embed_model_path = './AI-ModelScope/bge-small-zh-v1___5'
-embed_model = EmbeddingModel(embed_model_path)
+        return sentence_embeddings.cpu().tolist()
+
 # 定义向量库索引类
 class VectorStoreIndex:
-    """
-    class for VectorStoreIndex
-    """
-
-    def __init__(self, doecment_path: str, embed_model: EmbeddingModel) -> None:
+    def __init__(self, document_path: str, embed_model: EmbeddingModel) -> None:
         self.documents = []
-        for line in open(doecment_path, 'r', encoding='utf-8'):
-            line = line.strip()
-            self.documents.append(line)
-
+        for line in open(document_path, 'r', encoding='utf-8'):
+            self.documents.append(line.strip())
         self.embed_model = embed_model
         self.vectors = self.embed_model.get_embeddings(self.documents)
-
-        print(f'Loading {len(self.documents)} documents for {doecment_path}.')
-
+    
     def get_similarity(self, vector1: List[float], vector2: List[float]) -> float:
-        """
-        calculate cosine similarity between two vectors
-        """
         dot_product = np.dot(vector1, vector2)
         magnitude = np.linalg.norm(vector1) * np.linalg.norm(vector2)
-        if not magnitude:
-            return 0
-        return dot_product / magnitude
-
+        return dot_product / magnitude if magnitude else 0
+    
     def query(self, question: str, k: int = 1) -> List[str]:
         question_vector = self.embed_model.get_embeddings([question])[0]
         result = np.array([self.get_similarity(question_vector, vector) for vector in self.vectors])
-        return np.array(self.documents)[result.argsort()[-k:][::-1]].tolist() 
-print("> Create index...")
-doecment_path = './code/knowledge.txt'
-index = VectorStoreIndex(doecment_path, embed_model)
-question = '介绍一下广州大学'
-print('> Question:', question)
+        return np.array(self.documents)[result.argsort()[-k:][::-1]].tolist()
 
-context = index.query(question)
-print('> Context:', context)
-# 定义大语言模型类
-class LLM:
-    """
-    class for Yuan2.0 LLM
-    """
+# 定义一个函数，用于加载模型和tokenizer
+@st.cache_resource
+def load_model():
+    st.write("正在加载模型，请稍候...")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, add_eos_token=False, add_bos_token=False, eos_token='<eod>')
+    tokenizer.add_tokens(['<sep>', '<pad>', '<mask>', '<predict>', '<FIM_SUFFIX>', '<FIM_PREFIX>', '<FIM_MIDDLE>',
+                          '<commit_before>', '<commit_msg>', '<commit_after>', '<jupyter_start>', '<jupyter_text>',
+                          '<jupyter_code>', '<jupyter_output>', '<empty_output>'], special_tokens=True)
 
-    def __init__(self, model_path: str) -> None:
-        print("Creat tokenizer...")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path, add_eos_token=False, add_bos_token=False, eos_token='<eod>')
-        self.tokenizer.add_tokens(['<sep>', '<pad>', '<mask>', '<predict>', '<FIM_SUFFIX>', '<FIM_PREFIX>', '<FIM_MIDDLE>','<commit_before>','<commit_msg>','<commit_after>','<jupyter_start>','<jupyter_text>','<jupyter_code>','<jupyter_output>','<empty_output>'], special_tokens=True)
+    model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch_dtype, trust_remote_code=True).cuda()
+    
+    # 加载Embedding模型
+    embed_model_path = './AI-ModelScope/bge-small-zh-v1___5'
+    embed_model = EmbeddingModel(embed_model_path)
 
-        print("Creat model...")
-        self.model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.bfloat16, trust_remote_code=True).cuda()
+    # 创建文档索引
+    document_path = './code/knowledge.txt'
+    index = VectorStoreIndex(document_path, embed_model)
 
-        print(f'Loading Yuan2.0 model from {model_path}.')
+    st.write("模型加载完成。")
+    return tokenizer, model, index
 
-    def generate(self, question: str, context: List):
-        if context:
-            prompt = f'背景：{context}\n问题：{question}\n请基于背景，回答问题。'
-        else:
-            prompt = question
+# 加载模型和tokenizer
+tokenizer, model, index = load_model()
 
-        prompt += "<sep>"
-        inputs = self.tokenizer(prompt, return_tensors="pt")["input_ids"].cuda()
-        outputs = self.model.generate(inputs, do_sample=False, max_length=1024)
-        output = self.tokenizer.decode(outputs[0])
+# 初次运行时，session_state中没有"messages"，需要创建一个空列表
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 
-        print(output.split("<sep>")[-1])
-print("> Create Yuan2.0 LLM...")
-model_path = './IEITYuan/Yuan2-2B-Mars-hf'
-llm = LLM(model_path)
-print('> Without RAG:')
-llm.generate(question, [])
+# 每次对话时，遍历session_state中的所有消息，并显示在聊天界面上
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
 
-print('> With RAG:')
-llm.generate(question, context)
+# 如果用户在聊天输入框中输入了内容，则执行以下操作
+if prompt := st.chat_input("请输入你的问题..."):
+    # 将用户的输入添加到session_state中的messages列表中
+    st.session_state.messages.append({"role": "user", "content": prompt})
+
+    # 在聊天界面上显示用户的输入
+    st.chat_message("user").write(prompt)
+
+    # 使用索引查询与问题相关的上下文
+    context = index.query(prompt)
+    
+    # 调用模型生成回复
+    if context:
+        full_prompt = f'背景：{context}\n问题：{prompt}\n请基于背景，回答问题。<sep>'
+    else:
+        full_prompt = prompt + "<sep>"
+
+    inputs = tokenizer(full_prompt, return_tensors="pt")["input_ids"].cuda()
+    outputs = model.generate(inputs, do_sample=False, max_length=1024)
+    response = tokenizer.decode(outputs[0]).split("<sep>")[-1].replace("<eod>", '')
+
+    # 将模型的输出添加到session_state中的messages列表中
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
+    # 在聊天界面上显示模型的输出
+    st.chat_message("assistant").write(response)
