@@ -39,22 +39,25 @@ document_path = get_document_path(book_selection)
 @st.cache_resource
 def load_model_and_tokenizer():
     try:
-        st.write("正在加载模型，请稍候...")
+        st.session_state.loading_message = st.empty()
+        st.session_state.loading_message.write("正在加载模型，请稍候...")
+        
         tokenizer = AutoTokenizer.from_pretrained(model_path, add_eos_token=False, add_bos_token=False, eos_token='<eod>')
         tokenizer.add_tokens(['<sep>', '<pad>', '<mask>', '<predict>', '<FIM_SUFFIX>', '<FIM_PREFIX>', '<FIM_MIDDLE>',
                               '<commit_before>', '<commit_msg>', '<commit_after>', '<jupyter_start>', '<jupyter_text>',
                               '<jupyter_code>', '<jupyter_output>', '<empty_output>'], special_tokens=True)
 
         model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch_dtype, trust_remote_code=True).cuda()
-        
-        # 存储到 session_state 中以缓存
+
         st.session_state.tokenizer = tokenizer
         st.session_state.model = model
-        
+
         # 清除模型加载提示
-        if "loading_message" in st.session_state:
-            st.session_state.loading_message.empty()
+        st.session_state.loading_message.empty()
+        st.session_state.loading_message = None
         
+        st.session_state.model_loaded = True
+        st.write("模型加载完成。")
         return tokenizer, model
     except Exception as e:
         st.error(f"加载模型时出错: {e}")
@@ -132,11 +135,14 @@ index = VectorStoreIndex(document_path, embed_model)
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# 清空对话历史当名著发生变化时
-if 'previous_book' in st.session_state and st.session_state.previous_book != book_selection:
-    st.session_state["messages"] = []
+# 初始化 previous_book
+if 'previous_book' not in st.session_state:
+    st.session_state.previous_book = ""
 
-st.session_state.previous_book = book_selection
+# 清空对话历史当名著发生变化时
+if st.session_state.previous_book != book_selection:
+    st.session_state["messages"] = []
+    st.session_state.previous_book = book_selection
 
 # 每次对话时，遍历session_state中的所有消息，并显示在聊天界面上
 for msg in st.session_state.messages:
