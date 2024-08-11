@@ -2,12 +2,14 @@
 AIReader 是一个基于Yuan2.0的名著阅读助手，它可以帮助用户快速阅读名著，并回答相关问题。
 ---
 ## 环境准备  
-需要modelscope，torch，transformers，streamlit，sentencepiece，protobuf，einops等依赖
+需要modelscope，torch，transformers，streamlit，sentencepiece，protobuf，einops，faiss-gpu等依赖
 ```Shell
 # 查看已安装依赖,包括modelscope，torch，transformers等
 pip list
 # 安装 streamlit
 pip install streamlit==1.24.0
+# 安装 faiss-gpu
+pip3 install faiss-gpu
 ```
 ---
 
