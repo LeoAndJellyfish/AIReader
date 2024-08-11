@@ -1,5 +1,5 @@
-# AIExamGrader（在建）
-AIExamGrader 是一个基于Yuan2.0的自动评分系统，旨在通过人工智能技术对考试卷和论文进行智能化评估。该系统能够分析和评分学生提交的作业，提供准确、公平的评分结果。支持多种类型的考试题目和评分标准，并且可以根据实际需求进行自定义配置。
+# Yuan2.0 AIReader（在建）
+AIReader 是一个基于Yuan2.0的名著阅读助手，它可以帮助用户快速阅读名著，并回答相关问题。
 ---
 ## 环境准备  
 需要modelscope，torch，transformers，streamlit，sentencepiece，protobuf，einops等依赖

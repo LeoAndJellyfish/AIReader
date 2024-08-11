@@ -3,10 +3,10 @@ from transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM
 import torch
 from typing import List
 import numpy as np
- 
+
 # 设置标题和描述
-st.title("💬 Yuan2.0 AIExamGrader")
-st.write("一个结合了 RAG（检索增强生成）的自动评分系统。")
+st.title("💬 Yuan2.0 AIReader")
+st.write("一个结合了 RAG（检索增强生成）的名著阅读助手。")
  
 # 定义模型路径和数据类型
 model_path = './IEITYuan/Yuan2-2B-Mars-hf'
