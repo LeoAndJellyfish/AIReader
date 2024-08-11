@@ -4,7 +4,7 @@ import pandas as pd
 from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForSeq2Seq, TrainingArguments, Trainer
 # 读取数据
-df = pd.read_json('./code/data.json')
+df = pd.read_json('./data.json')
 ds = Dataset.from_pandas(df)
 # 查看数据
 len(ds)
