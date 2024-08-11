@@ -16,7 +16,7 @@ pip install streamlit==1.24.0
 首先运行code\Dmodle.py下载向量模型与源大模型  
 然后运行
 ```Shell
-streamlit run code\main.py
+streamlit run code/main.py --server.address 127.0.0.1 --server.port 6006
 ```
 
 ### 方法二：（自动化一键启动）
