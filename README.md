@@ -19,9 +19,9 @@ pip install streamlit==1.24.0
 streamlit run code\main.py
 ```
 
-### 方法二：（自动化一键启动）（待实现）
-
+### 方法二：（自动化一键启动）
+双击打开code\start.bat文件，即可启动服务
 
 ## TODO
 - [ ] 微调模型
-- [ ] 增加自动化一键启动功能
+- [√] 增加自动化一键启动功能
