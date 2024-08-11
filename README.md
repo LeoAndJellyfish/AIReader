@@ -20,8 +20,10 @@ streamlit run code/main.py --server.address 127.0.0.1 --server.port 6006
 ```
 
 ### 方法二：（自动化一键启动）
+首先运行code\Dmodle.py下载向量模型与源大模型  
 双击打开code\start.bat文件，即可启动服务
 
 ## TODO
 - [ ] 微调模型
 - [√] 增加自动化一键启动功能
+- [ ] 目前的RAG，会导致在提问与knowledge无关的问题的时候也掺杂着knowledge的内容，如何解决？
