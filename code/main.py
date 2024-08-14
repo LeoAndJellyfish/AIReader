@@ -1,9 +1,11 @@
+import os
 import streamlit as st
 import json
 from transformers import AutoModel, AutoTokenizer, AutoModelForCausalLM
 import torch
 from typing import List
 import numpy as np
+import pickle
 
 # 设置标题和描述
 st.title("💬 Yuan2.0 AIReader")
@@ -97,16 +99,33 @@ class EmbeddingModel:
 
 # 定义向量库索引类
 class VectorStoreIndex:
-    def __init__(self, document_path: str, embed_model: EmbeddingModel) -> None:
-        try:
-            self.documents = []
-            for line in open(document_path, 'r', encoding='utf-8'):
-                self.documents.append(line.strip())
-            self.embed_model = embed_model
-            self.vectors = self.embed_model.get_embeddings(self.documents)
-        except Exception as e:
-            st.error(f"初始化VectorStoreIndex时出错: {e}")
-            raise
+    def __init__(self, document_path: str, embed_model: EmbeddingModel, batch_size: int = 32) -> None:
+        self.document_path = document_path
+        self.embed_model = embed_model
+        self.batch_size = batch_size
+        self.vector_cache_path = f"{document_path}.pkl"
+        self.documents, self.vectors = self.load_or_create_vectors()
+
+    def load_or_create_vectors(self):
+        if os.path.exists(self.vector_cache_path):
+            with open(self.vector_cache_path, 'rb') as f:
+                vectors = pickle.load(f)
+            documents = [line.strip() for line in open(self.document_path, 'r', encoding='utf-8')]
+        else:
+            documents = [line.strip() for line in open(self.document_path, 'r', encoding='utf-8')]
+            vectors = self.load_vectors_in_batches()
+            with open(self.vector_cache_path, 'wb') as f:
+                pickle.dump(vectors, f)
+        return documents, vectors
+
+    def load_vectors_in_batches(self) -> List[List[float]]:
+        vectors = []
+        num_batches = (len(self.documents) + self.batch_size - 1) // self.batch_size
+        for i in range(num_batches):
+            batch_docs = self.documents[i * self.batch_size:(i + 1) * self.batch_size]
+            batch_vectors = self.embed_model.get_embeddings(batch_docs)
+            vectors.extend(batch_vectors)
+        return vectors
 
     def get_similarity(self, vector1: List[float], vector2: List[float]) -> float:
         try:
@@ -129,7 +148,7 @@ class VectorStoreIndex:
 # 每次用户选择名著时，加载对应的 knowledge 文档
 embed_model_path = './AI-ModelScope/bge-small-zh-v1___5'
 embed_model = EmbeddingModel(embed_model_path)
-index = VectorStoreIndex(document_path, embed_model)
+index = VectorStoreIndex(document_path, embed_model, batch_size=32)
 
 # 初次运行时，session_state中没有"messages"，需要创建一个空列表
 if "messages" not in st.session_state:

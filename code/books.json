@@ -7,6 +7,10 @@
         {
             "name": "Example2",
             "document_path": "./code/inbooks/knowledge2.txt"
+        },
+        {
+            "name": "战争与和平",
+            "document_path": "./code/inbooks/战争与和平.txt"
         }
     ]
 }
