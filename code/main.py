@@ -104,19 +104,20 @@ class VectorStoreIndex:
         self.embed_model = embed_model
         self.batch_size = batch_size
         self.vector_cache_path = f"{document_path}.pkl"
-        self.documents, self.vectors = self.load_or_create_vectors()
+        self.documents = []
+        self.vectors = []
+        self.load_or_create_vectors()
 
     def load_or_create_vectors(self):
         if os.path.exists(self.vector_cache_path):
             with open(self.vector_cache_path, 'rb') as f:
-                vectors = pickle.load(f)
-            documents = [line.strip() for line in open(self.document_path, 'r', encoding='utf-8')]
+                self.vectors = pickle.load(f)
+            self.documents = [line.strip() for line in open(self.document_path, 'r', encoding='utf-8')]
         else:
-            documents = [line.strip() for line in open(self.document_path, 'r', encoding='utf-8')]
-            vectors = self.load_vectors_in_batches()
+            self.documents = [line.strip() for line in open(self.document_path, 'r', encoding='utf-8')]
+            self.vectors = self.load_vectors_in_batches()
             with open(self.vector_cache_path, 'wb') as f:
-                pickle.dump(vectors, f)
-        return documents, vectors
+                pickle.dump(self.vectors, f)
 
     def load_vectors_in_batches(self) -> List[List[float]]:
         vectors = []
