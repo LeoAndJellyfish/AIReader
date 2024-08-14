@@ -6,6 +6,7 @@ import torch
 from typing import List
 import numpy as np
 import pickle
+import faiss
 
 # 设置标题和描述
 st.title("💬 Yuan2.0 AIReader")
@@ -54,10 +55,7 @@ def load_model_and_tokenizer():
         st.session_state.tokenizer = tokenizer
         st.session_state.model = model
 
-        # 清除模型加载提示
         st.session_state.loading_message.empty()
-        st.session_state.loading_message = None
-        
         st.session_state.model_loaded = True
         st.write("模型加载完成。")
         return tokenizer, model
@@ -106,6 +104,7 @@ class VectorStoreIndex:
         self.vector_cache_path = f"{document_path}.pkl"
         self.documents = []
         self.vectors = []
+        self.index = None
         self.load_or_create_vectors()
 
     def load_or_create_vectors(self):
@@ -113,17 +112,18 @@ class VectorStoreIndex:
             with open(self.vector_cache_path, 'rb') as f:
                 self.vectors = pickle.load(f)
             self.documents = [line.strip() for line in open(self.document_path, 'r', encoding='utf-8')]
+            self.build_faiss_index()
         else:
             self.documents = [line.strip() for line in open(self.document_path, 'r', encoding='utf-8')]
             self.vectors = self.load_vectors_in_batches()
             with open(self.vector_cache_path, 'wb') as f:
                 pickle.dump(self.vectors, f)
+            self.build_faiss_index()
 
     def load_vectors_in_batches(self) -> List[List[float]]:
         vectors = []
         num_batches = (len(self.documents) + self.batch_size - 1) // self.batch_size
 
-        # 添加进度条
         progress_bar = st.progress(0)
         
         for i in range(num_batches):
@@ -131,27 +131,26 @@ class VectorStoreIndex:
             batch_vectors = self.embed_model.get_embeddings(batch_docs)
             vectors.extend(batch_vectors)
             
-            # 更新进度条
-            progress = (i + 1) / num_batches
-            progress_bar.progress(progress)
+            progress_bar.progress((i + 1) / num_batches)
         
-        progress_bar.empty()  # 清空进度条
+        progress_bar.empty()
         return vectors
 
-    def get_similarity(self, vector1: List[float], vector2: List[float]) -> float:
-        try:
-            dot_product = np.dot(vector1, vector2)
-            magnitude = np.linalg.norm(vector1) * np.linalg.norm(vector2)
-            return dot_product / magnitude if magnitude else 0
-        except Exception as e:
-            st.error(f"计算相似度时出错: {e}")
-            return 0
+    def build_faiss_index(self):
+        if not self.vectors:
+            st.error("没有向量数据来构建Faiss索引")
+            return
+        
+        dimension = len(self.vectors[0])  # 向量的维度
+        self.index = faiss.IndexFlatL2(dimension)  # 使用 L2 距离
+        self.index.add(np.array(self.vectors, dtype=np.float32))
 
     def query(self, question: str, k: int = 1) -> List[str]:
         try:
             question_vector = self.embed_model.get_embeddings([question])[0]
-            result = np.array([self.get_similarity(question_vector, vector) for vector in self.vectors])
-            return np.array(self.documents)[result.argsort()[-k:][::-1]].tolist()
+            question_vector = np.array(question_vector, dtype=np.float32).reshape(1, -1)
+            _, indices = self.index.search(question_vector, k)
+            return [self.documents[i] for i in indices[0]]
         except Exception as e:
             st.error(f"查询时出错: {e}")
             return []
@@ -159,7 +158,9 @@ class VectorStoreIndex:
 # 每次用户选择名著时，加载对应的 knowledge 文档
 embed_model_path = './AI-ModelScope/bge-small-zh-v1___5'
 embed_model = EmbeddingModel(embed_model_path)
-index = VectorStoreIndex(document_path, embed_model, batch_size=32)
+
+if document_path:
+    index = VectorStoreIndex(document_path, embed_model, batch_size=32)
 
 # 初次运行时，session_state中没有"messages"，需要创建一个空列表
 if "messages" not in st.session_state:
@@ -181,18 +182,21 @@ for msg in st.session_state.messages:
 # 如果用户在聊天输入框中输入了内容，则执行以下操作
 if prompt := st.chat_input("请输入你的问题..."):
     try:
-        # 将用户的输入添加到session_state中的messages列表中
         st.session_state.messages.append({"role": "user", "content": prompt})
-
-        # 在聊天界面上显示用户的输入
         st.chat_message("user").write(prompt)
 
         # 使用索引查询与问题相关的上下文
-        context = index.query(prompt)
+        context = index.query(prompt) if index else []
 
         # 调用模型生成回复
         if context:
-            full_prompt = f'背景：{context}\n问题：{prompt}\n请基于背景，回答问题。<sep>'
+            full_prompt = f"""
+                你是一个名著阅读助手，你能够根据提供的原文回答用户的问题。
+                原文：{context}
+                问题：{prompt}
+                请回答这个问题。
+                <sep>
+                """
         else:
             full_prompt = prompt + "<sep>"
 
@@ -207,10 +211,7 @@ if prompt := st.chat_input("请输入你的问题..."):
         )
         response = tokenizer.decode(outputs[0]).split("<sep>")[-1].replace("<eod>", '')
 
-        # 将模型的输出添加到session_state中的messages列表中
         st.session_state.messages.append({"role": "assistant", "content": response})
-
-        # 在聊天界面上显示模型的输出
         st.chat_message("assistant").write(response)
     except Exception as e:
         st.error(f"处理用户输入时出错: {e}")
