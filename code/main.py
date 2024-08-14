@@ -122,10 +122,20 @@ class VectorStoreIndex:
     def load_vectors_in_batches(self) -> List[List[float]]:
         vectors = []
         num_batches = (len(self.documents) + self.batch_size - 1) // self.batch_size
+
+        # 添加进度条
+        progress_bar = st.progress(0)
+        
         for i in range(num_batches):
             batch_docs = self.documents[i * self.batch_size:(i + 1) * self.batch_size]
             batch_vectors = self.embed_model.get_embeddings(batch_docs)
             vectors.extend(batch_vectors)
+            
+            # 更新进度条
+            progress = (i + 1) / num_batches
+            progress_bar.progress(progress)
+        
+        progress_bar.empty()  # 清空进度条
         return vectors
 
     def get_similarity(self, vector1: List[float], vector2: List[float]) -> float:
