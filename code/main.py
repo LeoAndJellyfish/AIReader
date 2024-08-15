@@ -46,7 +46,7 @@ def load_pipeline(model_path: str, torch_dtype):
     # 加载HuggingFace模型管道
     try:
         st.write("正在加载模型，请稍候...")
-        hf_model_pipeline = hf_pipeline("text-generation", model=model_path, tokenizer=model_path, torch_dtype=torch_dtype, device=0)
+        hf_model_pipeline = hf_pipeline("text-generation", model=model_path, tokenizer=model_path, torch_dtype=torch_dtype, device=0, trust_remote_code=True)
         st.write("模型加载完成。")
         return HuggingFacePipeline(pipeline=hf_model_pipeline)
     except Exception as e:
@@ -63,7 +63,7 @@ pipeline = load_pipeline(model_path, torch_dtype)
 def load_vectorstore(document_path: str, embed_model_path: str):
     # 加载文本文件并创建向量库
     loader = TextLoader(document_path)
-    embeddings = HuggingFaceEmbeddings(embed_model_path)
+    embeddings = HuggingFaceEmbeddings(model_name=embed_model_path)
     return FAISS.from_documents(loader.load(), embeddings)
  
 # 加载向量库
