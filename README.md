@@ -6,8 +6,8 @@ AIReader 是一个基于Yuan2.0的名著阅读助手，它可以帮助用户快�
 # 查看已安装依赖
 pip list
 # 安装环境
-pip install faiss-gpu
-pip install streamlit torch langchain transformers
+pip install --upgrade pip
+pip install faiss-gpu streamlit langchain langchain_community langchain_huggingface
 ```
 ---
 
