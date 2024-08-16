@@ -195,13 +195,18 @@ def main():
             loader = TextLoader(temp_file_path)
         docs = loader.load()
 
-        st.chat_message("assistant").write(f"正在生成名著概括")
+        # 生成概括按钮
+        if st.button("生成概括"):
+            st.chat_message("assistant").write(f"正在生成名著概括")
 
-        # 生成概括
-        summary = summarizer.summarize(docs)
-        
-        # 在聊天界面上显示模型的输出
-        st.chat_message("assistant").write(summary)
+            # 生成概括
+            try:
+                summary = summarizer.summarize(docs)
+            except Exception as e:
+                st.error(f"Error during summarization: {e}")
+            
+            # 在聊天界面上显示模型的输出
+            st.chat_message("assistant").write(summary)
 
         # 接收用户问题
         if query := st.text_input("Ask questions about your file"):
