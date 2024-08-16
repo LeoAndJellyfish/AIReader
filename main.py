@@ -180,15 +180,18 @@ def main():
         # 加载上传PDF的内容
         file_content = uploaded_file.read()
 
+        # 获取文件扩展名
+        file_extension = uploaded_file.name.split('.')[-1]
+
         # 写入临时文件
-        temp_file_path = f"temp.{uploaded_file.type}"
+        temp_file_path = f"temp.{file_extension}"
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
 
         # 加载临时文件中的内容
-        if uploaded_file.type == 'pdf':
+        if file_extension == 'pdf':
             loader = PyPDFLoader(temp_file_path)
-        elif uploaded_file.type == 'txt':
+        elif file_extension == 'txt':
             loader = TextLoader(temp_file_path)
         docs = loader.load()
 
