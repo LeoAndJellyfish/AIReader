@@ -31,3 +31,10 @@ streamlit run app.py --server.address 127.0.0.1 --server.port 6006
 - [ ] 改进概括算法实现
 - [ ] 改进用户页面
 - [ ] 关闭后删除临时文件
+
+## 备注
+这里的代码是gpu运行版本，创空间发布的是cpu版本。
+
+## 链接
+体验demo：https://www.modelscope.cn/studios/leo12QWER/AIReader
+开发日志：https://zhuanlan.zhihu.com/p/713670859
