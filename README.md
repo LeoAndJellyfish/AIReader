@@ -15,7 +15,7 @@ pip install faiss-gpu streamlit langchain langchain_community langchain_huggingf
 首先运行code\Dmodle.py下载向量模型与源大模型  
 然后运行
 ```Shell
-streamlit run code/main.py --server.address 127.0.0.1 --server.port 6006
+streamlit run main.py --server.address 127.0.0.1 --server.port 6006
 ```
 ## TODO
 - [ ] 微调模型
