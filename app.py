@@ -12,8 +12,7 @@ from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from typing import Any, List, Optional
-import psutil
-import time
+import psutil  # 添加psutil库
 
 # 向量模型下载
 from modelscope import snapshot_download
@@ -29,7 +28,8 @@ model_path = './IEITYuan/Yuan2-2B-Mars-hf'
 embedding_model_path = './AI-ModelScope/bge-small-zh-v1___5'
 
 # 定义模型数据类型
-torch_dtype = torch.float32  # CPU
+torch_dtype = torch.bfloat16 # A10
+# torch_dtype = torch.float16 # P100
 
 # 定义源大模型类
 class Yuan2_LLM(LLM):
@@ -48,7 +48,7 @@ class Yuan2_LLM(LLM):
         self.tokenizer.add_tokens(['<sep>', '<pad>', '<mask>', '<predict>', '<FIM_SUFFIX>', '<FIM_PREFIX>', '<FIM_MIDDLE>','<commit_before>','<commit_msg>','<commit_after>','<jupyter_start>','<jupyter_text>','<jupyter_code>','<jupyter_output>','<empty_output>'], special_tokens=True)
 
         print("Creat model...")
-        self.model = AutoModelForCausalLM.from_pretrained(mode_path, torch_dtype=torch_dtype, trust_remote_code=True)
+        self.model = AutoModelForCausalLM.from_pretrained(mode_path, torch_dtype=torch.bfloat16, trust_remote_code=True).cuda()
 
     def _call(
         self,
@@ -59,8 +59,8 @@ class Yuan2_LLM(LLM):
     ) -> str:
         prompt = prompt.strip()
         prompt += "<sep>"
-        inputs = self.tokenizer(prompt, return_tensors="pt")["input_ids"]
-        outputs = self.model.generate(inputs, do_sample=False, max_new_tokens=4096)
+        inputs = self.tokenizer(prompt, return_tensors="pt")["input_ids"].cuda()
+        outputs = self.model.generate(inputs,do_sample=False,max_new_tokens=4096)
         output = self.tokenizer.decode(outputs[0])
         response = output.split("<sep>")[-1].split("<eod>")[0]
 
@@ -75,7 +75,7 @@ class Yuan2_LLM(LLM):
 def get_models():
     llm = Yuan2_LLM(model_path)
 
-    model_kwargs = {'device': 'cpu'}
+    model_kwargs = {'device': 'cuda'}
     encode_kwargs = {'normalize_embeddings': True} # set True to compute cosine similarity
     embeddings = HuggingFaceEmbeddings(
         model_name=embedding_model_path,
@@ -160,18 +160,6 @@ class ChatBot:
 
         return chunks, response
 
-def update_resource_usage():
-    """更新系统资源使用情况"""
-    cpu_usage = psutil.cpu_percent(interval=1)
-    memory_info = psutil.virtual_memory()
-    st.sidebar.text(f"CPU Usage: {cpu_usage}%")
-    st.sidebar.text(f"Memory Usage: {memory_info.percent}% ({memory_info.used // (1024**2)}MB / {memory_info.total // (1024**2)}MB)")
-
-    if torch.cuda.is_available():
-        gpu_memory = torch.cuda.memory_allocated(0) / (1024**2)  # 转换为MB
-        gpu_memory_total = torch.cuda.get_device_properties(0).total_memory / (1024**2)  # 总显存，转换为MB
-        st.sidebar.text(f"GPU Memory Usage: {gpu_memory:.2f}MB / {gpu_memory_total:.2f}MB")
-
 def main():
     # 创建一个标题
     st.title('💬 Yuan2.0 AIReader')
@@ -185,11 +173,20 @@ def main():
     # 初始化ChatBot
     chatbot = ChatBot(llm, embeddings)
 
-    # 实时更新资源使用情况
-    resource_usage_container = st.sidebar.empty()
-    while True:
-        update_resource_usage()
-        time.sleep(1)  # 每秒更新一次
+    # 创建CPU和内存占用的显示窗
+    st.sidebar.header("System Resources")
+    cpu_usage = psutil.cpu_percent(interval=1)
+    memory_info = psutil.virtual_memory()
+    st.sidebar.text(f"CPU Usage: {cpu_usage}%")
+    st.sidebar.text(f"Memory Usage: {memory_info.percent}% ({memory_info.used // (1024**2)}MB / {memory_info.total // (1024**2)}MB)")
+
+    # 如果有GPU，显示GPU和显存使用情况
+    if torch.cuda.is_available():
+        gpu_usage = torch.cuda.utilization(0)
+        gpu_memory = torch.cuda.memory_allocated(0) / (1024**2)  # 转换为MB
+        gpu_memory_total = torch.cuda.get_device_properties(0).total_memory / (1024**2)  # 总显存，转换为MB
+        st.sidebar.text(f"GPU Usage: {gpu_usage}%")
+        st.sidebar.text(f"GPU Memory Usage: {gpu_memory:.2f}MB / {gpu_memory_total:.2f}MB")
 
     # 上传pdf
     uploaded_file = st.file_uploader("Upload your file", type=['pdf', 'txt'])
