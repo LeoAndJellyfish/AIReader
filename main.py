@@ -25,7 +25,7 @@ model_dir = snapshot_download('IEITYuan/Yuan2-2B-Mars-hf', cache_dir='./')
 model_path = './IEITYuan/Yuan2-2B-Mars-hf'
 
 # 定义向量模型路径
-embedding_model_path = './AI-ModelScope/bge-small-en-v1___5'
+embedding_model_path = './AI-ModelScope/bge-small-zh-v1___5'
 
 # 定义模型数据类型
 torch_dtype = torch.bfloat16 # A10
@@ -174,14 +174,14 @@ def main():
     chatbot = ChatBot(llm, embeddings)
 
     # 上传pdf
-    uploaded_file = st.file_uploader("Upload your PDF", type=['pdf', 'txt'])
+    uploaded_file = st.file_uploader("Upload your file", type=['pdf', 'txt'])
 
     if uploaded_file:
         # 加载上传PDF的内容
         file_content = uploaded_file.read()
 
         # 写入临时文件
-        temp_file_path = "temp." + uploaded_file.type
+        temp_file_path = f"temp.{uploaded_file.type}"
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
 
