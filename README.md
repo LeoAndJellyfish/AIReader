@@ -19,4 +19,4 @@ streamlit run code/main.py --server.address 127.0.0.1 --server.port 6006
 ```
 ## TODO
 - [ ] 微调模型
-- [√] 用langchain重构代码
+- [ ] 用langchain重构代码
