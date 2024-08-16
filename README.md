@@ -21,7 +21,7 @@ pip install faiss-gpu streamlit==1.24.0 langchain langchain_community langchain_
 ## 启动服务
 运行
 ```Shell
-streamlit run main.py --server.address 127.0.0.1 --server.port 6006
+streamlit run app.py --server.address 127.0.0.1 --server.port 6006
 ```
 ---
 
