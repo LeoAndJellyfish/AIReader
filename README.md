@@ -14,7 +14,7 @@ git clone https://github.com/LeoAndJellyfish/AIReader.git
 pip list
 # 安装环境
 pip install --upgrade pip
-pip install faiss-gpu streamlit==1.24.0 langchain langchain_community langchain_huggingface pypdf
+pip install faiss-gpu streamlit==1.24.0 langchain langchain_community langchain_huggingface pypdf psutil
 ```
 
 ## 启动服务
