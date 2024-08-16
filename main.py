@@ -59,8 +59,18 @@ class Yuan2_LLM(LLM):
     ) -> str:
         prompt = prompt.strip()
         prompt += "<sep>"
+
+        # 计算输入 prompt 的 token 数量
+        input_token_count = len(self.tokenizer(prompt)["input_ids"])
+
+        # 设置 max_new_tokens，确保总 token 数量不超过模型限制
+        max_new_tokens = 4096 - input_token_count
+        
         inputs = self.tokenizer(prompt, return_tensors="pt")["input_ids"].cuda()
-        outputs = self.model.generate(inputs,do_sample=False,max_length=4096)
+
+        # 使用 max_new_tokens 控制生成的新 token 数量
+        outputs = self.model.generate(inputs, do_sample=False, max_new_tokens=max_new_tokens)
+        
         output = self.tokenizer.decode(outputs[0])
         response = output.split("<sep>")[-1].split("<eod>")[0]
 
