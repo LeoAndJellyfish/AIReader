@@ -34,6 +34,6 @@ streamlit run app.py --server.address 127.0.0.1 --server.port 6006
 这里的代码是gpu运行版本，创空间发布的是cpu版本。
 
 # 链接
-体验demo：https://www.modelscope.cn/studios/leo12QWER/AIReader
+体验demo还未发布：https://www.modelscope.cn/studios/leo12QWER/AIReader
 
 开发日志：https://zhuanlan.zhihu.com/p/713670859
