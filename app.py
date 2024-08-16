@@ -1,3 +1,4 @@
+# 导入所需的库
 import torch
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -12,7 +13,6 @@ from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from typing import Any, List, Optional
-import psutil  # 添加psutil库
 
 # 向量模型下载
 from modelscope import snapshot_download
@@ -173,21 +173,6 @@ def main():
     # 初始化ChatBot
     chatbot = ChatBot(llm, embeddings)
 
-    # 创建CPU和内存占用的显示窗
-    st.sidebar.header("System Resources")
-    cpu_usage = psutil.cpu_percent(interval=1)
-    memory_info = psutil.virtual_memory()
-    st.sidebar.text(f"CPU Usage: {cpu_usage}%")
-    st.sidebar.text(f"Memory Usage: {memory_info.percent}% ({memory_info.used // (1024**2)}MB / {memory_info.total // (1024**2)}MB)")
-
-    # 如果有GPU，显示GPU和显存使用情况
-    if torch.cuda.is_available():
-        gpu_usage = torch.cuda.utilization(0)
-        gpu_memory = torch.cuda.memory_allocated(0) / (1024**2)  # 转换为MB
-        gpu_memory_total = torch.cuda.get_device_properties(0).total_memory / (1024**2)  # 总显存，转换为MB
-        st.sidebar.text(f"GPU Usage: {gpu_usage}%")
-        st.sidebar.text(f"GPU Memory Usage: {gpu_memory:.2f}MB / {gpu_memory_total:.2f}MB")
-
     # 上传pdf
     uploaded_file = st.file_uploader("Upload your file", type=['pdf', 'txt'])
 
@@ -213,10 +198,7 @@ def main():
         st.chat_message("assistant").write(f"正在生成名著概括")
 
         # 生成概括
-        try:
-            summary = summarizer.summarize(docs)
-        except Exception as e:
-            st.error(f"Error during summarization: {e}")
+        summary = summarizer.summarize(docs)
         
         # 在聊天界面上显示模型的输出
         st.chat_message("assistant").write(summary)
