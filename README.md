@@ -7,13 +7,12 @@ AIReader 是一个基于Yuan2.0的名著阅读助手，它可以帮助用户快�
 pip list
 # 安装环境
 pip install --upgrade pip
-pip install faiss-gpu streamlit langchain langchain_community langchain_huggingface
+pip install faiss-gpu streamlit==1.24.0 langchain langchain_community langchain_huggingface pypdf
 ```
 ---
 
 ## 启动服务
-首先运行code\Dmodle.py下载向量模型与源大模型  
-然后运行
+运行
 ```Shell
 streamlit run main.py --server.address 127.0.0.1 --server.port 6006
 ```
