@@ -101,6 +101,13 @@ class Summarizer:
             template=summarizer_template
         )
         self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
+        
+        # 加载 text_splitter
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=450,
+            chunk_overlap=10,
+            length_function=len
+        )
 
     def summarize(self, docs):
         summaries = []
