@@ -102,10 +102,10 @@ class Summarizer:
         )
         self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
         
-        # 加载 text_splitter
+        # 加载 Summarizer 的 text_splitter
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=450,
-            chunk_overlap=10,
+            chunk_size=300,
+            chunk_overlap=5,
             length_function=len
         )
 
