@@ -83,7 +83,7 @@ def get_models():
     return llm, embeddings
 
 summarizer_template = """
-假设你是一个名著阅读助手，请尽可能简短地概括下面名著的主要内容。
+假设你是一个文章阅读助手，请尽可能简短地概括下面文章的主要内容。
 
 {text}
 """
@@ -136,7 +136,7 @@ class Summarizer:
         return final_summary
 
 chatbot_template = '''
-假设你是一个名著阅读助手，请基于背景，简要回答问题。
+假设你是一个文章阅读助手，请基于背景，简要回答问题。
 
 背景：
 {context}
