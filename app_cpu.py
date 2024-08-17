@@ -83,7 +83,7 @@ def get_models():
     return llm, embeddings
 
 summarizer_template = """
-假设你是一个名著阅读助手，请用一段话概括下面名著的主要内容，200字左右。
+假设你是一个名著阅读助手，请尽可能简短地概括下面名著的主要内容。50词左右。
 
 {text}
 """
