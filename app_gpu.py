@@ -223,7 +223,7 @@ def main():
 
         # 生成概括按钮
         if st.button("生成概括"):
-            st.chat_message("assistant").write(f"正在生成名著概括")
+            st.chat_message("assistant").write(f"正在生成文章概括")
 
             # 生成概括
             try:
