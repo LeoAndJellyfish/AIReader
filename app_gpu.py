@@ -11,6 +11,8 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.llms.base import LLM
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.docstore import InMemoryDocstore
+from langchain.schema import Document
 
 from typing import Any, List, Optional
 
@@ -134,10 +136,9 @@ chatbot_template  = '''
 {question}
 '''.strip()
 
-# 定义ChatBot类
 class ChatBot:
     """
-    class for ChatBot.
+    Class for ChatBot.
     """
 
     def __init__(self, llm, embeddings):
@@ -148,33 +149,34 @@ class ChatBot:
         self.chain = load_qa_chain(llm=llm, chain_type="stuff", prompt=self.prompt)
         self.embeddings = embeddings
 
-        # 加载 text_splitter
+        # 初始化text_splitter，用于分割文本
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=450,
             chunk_overlap=10,
             length_function=len
         )
 
-    def run(self, docs, query):
-        # 读取所有内容
+    def run(self, docs: List[Document], query: str):
+        # 读取所有文档内容
         text = ''.join([doc.page_content for doc in docs])
 
-        # 切分成chunks
+        # 切分文本成chunks
         all_chunks = self.text_splitter.split_text(text=text)
 
-        # 分批进行向量化
-        batch_size = 100  # 可以根据实际情况调整批大小
-        vectors = []
-        for i in range(0, len(all_chunks), batch_size):
-            batch_chunks = all_chunks[i:i + batch_size]
-            batch_vectors = self.embeddings.embed_documents(batch_chunks)
-            vectors.extend(batch_vectors)
-        
-        # 使用向量构建FAISS索引
-        VectorStore = FAISS(vectors, all_chunks)
+        # 创建Document对象列表
+        doc_objects = [Document(page_content=chunk) for chunk in all_chunks]
 
-        # 检索相似的chunks
-        chunks = VectorStore.similarity_search(query=query, k=1)
+        # 向量化chunks
+        vectors = self.embeddings.embed_documents([doc.page_content for doc in doc_objects])
+
+        # 使用InMemoryDocstore存储文档内容
+        docstore = InMemoryDocstore(dict(enumerate(doc_objects)))
+
+        # 创建FAISS向量索引
+        vectorstore = FAISS(vectors=vectors, texts=all_chunks, docstore=docstore)
+
+        # 检索最相似的文档
+        chunks = vectorstore.similarity_search(query=query, k=1)
 
         # 生成回复
         response = self.chain.run(input_documents=chunks, question=query)
