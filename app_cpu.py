@@ -103,11 +103,17 @@ class Summarizer:
         self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
 
     def summarize(self, docs):
-        # 拼接所有页面的内容生成摘要
-        content = ' '.join([doc.page_content for doc in docs])
-
-        summary = self.chain.run(content)
-        return summary
+        summaries = []
+        for doc in docs:
+            chunks = self.text_splitter.split_text(doc.page_content)
+            batch_size = 10  # 根据需要调整批大小
+            for i in range(0, len(chunks), batch_size):
+                batch_chunks = chunks[i:i + batch_size]
+                batch_summary = self.chain.run(" ".join(batch_chunks))
+                summaries.append(batch_summary)
+        
+        final_summary = " ".join(summaries)
+        return final_summary
 
 chatbot_template = '''
 假设你是一个名著阅读助手，请基于背景，简要回答问题。
@@ -147,8 +153,16 @@ class ChatBot:
         # 切分成chunks
         all_chunks = self.text_splitter.split_text(text=text)
 
-        # 转成向量并存储
-        VectorStore = FAISS.from_texts(all_chunks, embedding=self.embeddings)
+        # 分批进行向量化
+        batch_size = 100  # 可以根据实际情况调整批大小
+        vectors = []
+        for i in range(0, len(all_chunks), batch_size):
+            batch_chunks = all_chunks[i:i + batch_size]
+            batch_vectors = self.embeddings.embed_documents(batch_chunks)
+            vectors.extend(batch_vectors)
+        
+        # 使用向量构建FAISS索引
+        VectorStore = FAISS(vectors, all_chunks)
 
         # 检索相似的chunks
         chunks = VectorStore.similarity_search(query=query, k=1)
