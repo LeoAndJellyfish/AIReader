@@ -60,7 +60,7 @@ class Yuan2_LLM(LLM):
         prompt = prompt.strip()
         prompt += "<sep>"
         inputs = self.tokenizer(prompt, return_tensors="pt")["input_ids"].cuda()
-        outputs = self.model.generate(inputs,do_sample=False,max_new_tokens=4096)
+        outputs = self.model.generate(inputs,do_sample=False,max_new_tokens=2048)
         output = self.tokenizer.decode(outputs[0])
         response = output.split("<sep>")[-1].split("<eod>")[0]
 
@@ -85,7 +85,7 @@ def get_models():
     return llm, embeddings
 
 summarizer_template = """
-假设你是一个名著阅读助手，请尽可能简短地概括下面名著的主要内容。50词左右。
+假设你是一个名著阅读助手，请尽可能简短地概括下面名著的主要内容。
 
 {text}
 """
