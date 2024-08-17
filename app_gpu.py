@@ -116,12 +116,25 @@ class Summarizer:
         for doc in docs:
             chunks = self.text_splitter.split_text(doc.page_content)
             batch_size = 100  # 根据需要调整批大小
+
+            # 初始化进度条
+            progress_bar = st.progress(0)
+
+            # 批次处理文本块
+            total_batches = len(chunks) // batch_size + 1
             for i in range(0, len(chunks), batch_size):
                 batch_chunks = chunks[i:i + batch_size]
                 batch_summary = self.chain.run(" ".join(batch_chunks))
                 summaries.append(batch_summary)
+                
+                # 更新进度条
+                progress_bar.progress((i // batch_size + 1) / total_batches)
         
         final_summary = " ".join(summaries)
+        
+        # 完成进度条
+        progress_bar.progress(1.0)
+        
         return final_summary
 
 chatbot_template  = '''
