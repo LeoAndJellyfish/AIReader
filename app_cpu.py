@@ -113,7 +113,7 @@ class Summarizer:
         summaries = []
         for doc in docs:
             chunks = self.text_splitter.split_text(doc.page_content)
-            batch_size = 10  # 根据需要调整批大小
+            batch_size = 100  # 根据需要调整批大小
             for i in range(0, len(chunks), batch_size):
                 batch_chunks = chunks[i:i + batch_size]
                 batch_summary = self.chain.run(" ".join(batch_chunks))
