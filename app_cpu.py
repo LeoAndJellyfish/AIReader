@@ -174,7 +174,16 @@ def main():
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-        query = st.sidebar.text_input("Ask questions about your file", key="query")
+        # 显示对话历史
+        for message in st.session_state.messages:
+            if message["role"] == "user":
+                st.sidebar.markdown(f"> **User:** {message['content']}")
+            else:
+                st.sidebar.markdown(f"> **Assistant:** {message['content']}")
+
+        # 创建一个占位符，并将输入框固定在侧栏底部
+        input_placeholder = st.sidebar.empty()
+        query = input_placeholder.text_input("Ask questions about your file", key="query")
 
         if query:
             # 检索 + 生成回复
@@ -186,14 +195,6 @@ def main():
 
             # 清空输入框
             query = ""
-
-        # 显示对话历史
-        for message in st.session_state.messages:
-            with st.sidebar:
-                if message["role"] == "user":
-                    st.markdown(f"> **User:** {message['content']}")
-                else:
-                    st.markdown(f"> **Assistant:** {message['content']}")
 
 if __name__ == '__main__':
     main()
