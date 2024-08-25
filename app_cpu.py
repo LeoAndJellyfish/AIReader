@@ -10,7 +10,6 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.llms.base import LLM
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from streamlit_chat import message
 
 from typing import Any, List, Optional
 

@@ -11,7 +11,6 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.llms.base import LLM
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from streamlit_chat import message
 
 from typing import Any, List, Optional
 
@@ -135,6 +134,7 @@ class ChatBot:
         return chunks, response
 
 def main():
+    # 创建一个标题
     st.title('💬 Yuan2.0 AIReader')
 
     # 获取llm和embeddings
@@ -170,22 +170,24 @@ def main():
         for doc in docs:
             st.write(doc.page_content)
 
-        # 使用侧边栏显示对话历史和用户输入
+        # 使用侧边栏显示对话历史
         st.sidebar.header("Chat History")
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
+        messages = st.sidebar.empty()
 
-        for message_ in st.session_state.messages:
-            with st.sidebar:
-                message(message_["content"], is_user=message_["is_user"])
+        # 接收用户问题
+        query = st.text_input("Ask questions about your file")
 
-        if prompt := st.sidebar.text_input("Ask questions about your file"):
+        if query:
             # 检索 + 生成回复
-            chunks, response = chatbot.run(docs, prompt)
+            chunks, response = chatbot.run(docs, query)
 
-            # 更新对话历史
-            st.session_state.messages.append({"content": prompt, "is_user": True})
-            st.session_state.messages.append({"content": response, "is_user": False})
+            # 更新侧边栏的对话历史
+            with messages:
+                # 显示用户的提问
+                st.write(f"You: {query}")
+
+                # 显示模型的输出
+                st.write(f"Assistant: {response}")
 
 if __name__ == '__main__':
     main()
