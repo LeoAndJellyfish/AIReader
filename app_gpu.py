@@ -165,18 +165,29 @@ def main():
             loader = TextLoader(temp_file_path)
         docs = loader.load()
 
+        # 显示文档内容
+        col1, col2 = st.columns(2)
+        
+        # 显示文档内容在左侧
+        with col1:
+            st.subheader("Document Content:")
+            for doc in docs:
+                st.write(doc.page_content)
+
         # 接收用户问题
-        if query := st.text_input("Ask questions about your file"):
+        with col2:
+            query = st.text_input("Ask questions about your file")
 
-            # 检索 + 生成回复
-            chunks, response = chatbot.run(docs, query)
+            if query:
+                # 检索 + 生成回复
+                chunks, response = chatbot.run(docs, query)
 
-            # 在聊天界面上显示模型的输出
-            st.chat_message("assistant").write(f"正在检索相关信息")
-            st.chat_message("assistant").write(chunks)
+                # 在聊天界面上显示模型的输出
+                st.chat_message("assistant").write(f"正在检索相关信息")
+                st.chat_message("assistant").write(chunks)
 
-            st.chat_message("assistant").write(f"正在生成回复")
-            st.chat_message("assistant").write(response)
+                st.chat_message("assistant").write(f"正在生成回复")
+                st.chat_message("assistant").write(response)
 
 if __name__ == '__main__':
     main()
