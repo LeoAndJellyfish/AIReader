@@ -172,23 +172,30 @@ def main():
 
         # 使用侧边栏显示对话历史和用户输入
         st.sidebar.header("Chat History")
-        messages = st.sidebar.empty()
+        # 初始化对话历史
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+
         query = st.sidebar.text_input("Ask questions about your file", key="query")
 
         if query:
             # 检索 + 生成回复
             chunks, response = chatbot.run(docs, query)
 
-            # 更新侧边栏的对话历史
-            with messages:
-                # 清空之前的对话历史
-                messages.empty()
+            # 将用户提问和模型的回答添加到对话历史中
+            st.session_state.messages.append({"role": "user", "content": query})
+            st.session_state.messages.append({"role": "assistant", "content": response})
 
-                # 显示用户的提问
-                st.write(f"You: {query}")
+            # 清空输入框
+            query = ""
 
-                # 显示模型的输出
-                st.write(f"Assistant: {response}")
+        # 显示对话历史
+        for message in st.session_state.messages:
+            with st.sidebar:
+                if message["role"] == "user":
+                    st.markdown(f"> **User:** {message['content']}")
+                else:
+                    st.markdown(f"> **Assistant:** {message['content']}")
 
 if __name__ == '__main__':
     main()
