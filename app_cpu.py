@@ -171,6 +171,9 @@ def main():
         # 使用侧边栏显示对话历史和用户输入
         st.sidebar.header("Chat History")
 
+        # 创建一个固定位置的容器用于输入框
+        input_container = st.sidebar.container()
+
         # 初始化对话历史
         if "messages" not in st.session_state:
             st.session_state.messages = []
@@ -183,21 +186,20 @@ def main():
                 else:
                     st.markdown(f"> **Assistant:** {message['content']}")
 
-        # 将输入框放在对话历史之后
-        query = st.sidebar.text_input("Ask questions about your file", key="query")
+        # 在固定的容器内放置输入框
+        with input_container:
+            query = st.text_input("Ask questions about your file", key="query")
 
-        if query:
-            # 检索 + 生成回复
-            chunks, response = chatbot.run(docs, query)
+            if query:
+                # 检索 + 生成回复
+                chunks, response = chatbot.run(docs, query)
 
-            # 将用户提问和模型的回答添加到对话历史中
-            st.session_state.messages.append({"role": "user", "content": query})
-            st.session_state.messages.append({"role": "assistant", "content": response})
+                # 将用户提问和模型的回答添加到对话历史中
+                st.session_state.messages.append({"role": "user", "content": query})
+                st.session_state.messages.append({"role": "assistant", "content": response})
 
-            # 清空输入框
-            query = ""
-        
-            st.experimental_rerun()
+                # 清空输入框
+                query = ""
 
 if __name__ == '__main__':
     main()
