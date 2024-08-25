@@ -178,7 +178,7 @@ def main():
             st.session_state.messages = []
 
         # 创建一个固定位置的容器用于输入框
-        input_container = st.container()
+        input_container = st.sidebar.container()
 
         # 在固定容器中创建表单
         with input_container:
@@ -207,3 +207,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
