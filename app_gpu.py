@@ -119,14 +119,14 @@ class ChatBot:
         # 读取所有内容
         text = ''.join([doc.page_content for doc in docs])
 
-        # 切分成chunks
-        all_chunks = self.text_splitter.split_text(text=text)
-
-        # 转成向量并存储
-        VectorStore = FAISS.from_texts(all_chunks, embedding=self.embeddings)
+        # 检查是否已经缓存了向量和索引
+        if "vector_store" not in st.session_state:
+            # 首次构建向量和索引并缓存
+            all_chunks = self.text_splitter.split_text(text=text)
+            st.session_state.vector_store = FAISS.from_texts(all_chunks, embedding=self.embeddings)
 
         # 检索相似的chunks
-        chunks = VectorStore.similarity_search(query=query, k=1)
+        chunks = st.session_state.vector_store.similarity_search(query=query, k=1)
 
         # 生成回复
         response = self.chain.run(input_documents=chunks, question=query)
