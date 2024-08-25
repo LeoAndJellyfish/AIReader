@@ -134,7 +134,6 @@ class ChatBot:
         return chunks, response
 
 def main():
-    # 创建一个标题
     st.title('💬 Yuan2.0 AIReader')
 
     # 获取llm和embeddings
@@ -172,23 +171,20 @@ def main():
 
         # 使用侧边栏显示对话历史和用户输入
         st.sidebar.header("Chat History")
-        messages = st.sidebar.empty()
-        query = st.sidebar.text_input("Ask questions about your file", key="query")
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
 
-        if query:
+        for message_ in st.session_state.messages:
+            with st.sidebar:
+                message(message_["content"], is_user=message_["is_user"])
+
+        if prompt := st.sidebar.text_input("Ask questions about your file"):
             # 检索 + 生成回复
-            chunks, response = chatbot.run(docs, query)
+            chunks, response = chatbot.run(docs, prompt)
 
-            # 更新侧边栏的对话历史
-            with messages:
-                # 清空之前的对话历史
-                messages.empty()
-
-                # 显示用户的提问
-                st.write(f"You: {query}")
-
-                # 显示模型的输出
-                st.write(f"Assistant: {response}")
+            # 更新对话历史
+            st.session_state.messages.append({"content": prompt, "is_user": True})
+            st.session_state.messages.append({"content": response, "is_user": False})
 
 if __name__ == '__main__':
     main()
