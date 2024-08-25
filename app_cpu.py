@@ -177,9 +177,8 @@ def main():
         # 初始化对话历史
         if "messages" not in st.session_state:
             st.session_state.messages = []
-        
-        with input_container:
-            query = st.text_input("Ask questions about your file", key="query")
+
+        query = st.sidebar.text_input("Ask questions about your file", key="query")
 
         if query:
             # 检索 + 生成回复

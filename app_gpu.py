@@ -173,20 +173,16 @@ def main():
         # 使用侧边栏显示对话历史和用户输入
         st.sidebar.header("Chat History")
 
+        # 创建一个固定位置的容器用于输入框
+        input_container = st.sidebar.container()
+
         # 初始化对话历史
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-        # 创建一个固定位置的容器用于输入框
-        input_container = st.sidebar.container()
+        query = st.sidebar.text_input("Ask questions about your file", key="query")
 
-        # 在固定容器中创建表单
-        with input_container:
-            with st.form(key='input_form'):
-                query = st.text_input("Ask questions about your file", key="query")
-                submit_button = st.form_submit_button(label='Submit')
-
-        if submit_button and query:
+        if query:
             # 检索 + 生成回复
             chunks, response = chatbot.run(docs, query)
 
