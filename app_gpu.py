@@ -170,12 +170,10 @@ def main():
         for doc in docs:
             st.write(doc.page_content)
 
-        # 使用侧边栏显示对话历史
+        # 使用侧边栏显示对话历史和用户输入
         st.sidebar.header("Chat History")
         messages = st.sidebar.empty()
-
-        # 接收用户问题
-        query = st.text_input("Ask questions about your file")
+        query = st.sidebar.text_input("Ask questions about your file", key="query")
 
         if query:
             # 检索 + 生成回复
@@ -183,6 +181,9 @@ def main():
 
             # 更新侧边栏的对话历史
             with messages:
+                # 清空之前的对话历史
+                messages.empty()
+
                 # 显示用户的提问
                 st.write(f"You: {query}")
 
