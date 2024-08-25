@@ -196,6 +196,8 @@ def main():
 
             # 清空输入框
             query = ""
+        
+            st.experimental_rerun()
 
 if __name__ == '__main__':
     main()
