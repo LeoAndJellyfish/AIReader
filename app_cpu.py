@@ -138,9 +138,6 @@ def main():
     # 获取llm和embeddings
     llm, embeddings = get_models()
 
-    # 初始化summarizer
-    summarizer = Summarizer(llm)
-
     # 初始化ChatBot
     chatbot = ChatBot(llm, embeddings)
 
