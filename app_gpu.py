@@ -84,59 +84,6 @@ def get_models():
     )
     return llm, embeddings
 
-summarizer_template = """
-假设你是一个文章阅读助手，请尽可能简短地概括下面文章的主要内容。
-
-{text}
-"""
-
-# 定义Summarizer类
-class Summarizer:
-    """
-    class for Summarizer.
-    """
-
-    def __init__(self, llm):
-        self.llm = llm
-        self.prompt = PromptTemplate(
-            input_variables=["text"],
-            template=summarizer_template
-        )
-        self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
-        
-        # 加载 Summarizer 的 text_splitter
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=300,
-            chunk_overlap=5,
-            length_function=len
-        )
-
-    def summarize(self, docs):
-        summaries = []
-        for doc in docs:
-            chunks = self.text_splitter.split_text(doc.page_content)
-            batch_size = 10  # 根据需要调整批大小
-
-            # 初始化进度条
-            progress_bar = st.progress(0)
-
-            # 批次处理文本块
-            total_batches = len(chunks) // batch_size + 1
-            for i in range(0, len(chunks), batch_size):
-                batch_chunks = chunks[i:i + batch_size]
-                batch_summary = self.chain.run(" ".join(batch_chunks))
-                summaries.append(batch_summary)
-                
-                # 更新进度条
-                progress_bar.progress((i // batch_size + 1) / total_batches)
-        
-        final_summary = " ".join(summaries)
-        
-        # 完成进度条
-        progress_bar.progress(1.0)
-        
-        return final_summary
-
 chatbot_template  = '''
 假设你是一个文章阅读助手，请基于背景，简要回答问题。
 
@@ -220,19 +167,6 @@ def main():
         elif file_extension == 'txt':
             loader = TextLoader(temp_file_path)
         docs = loader.load()
-
-        # 生成概括按钮
-        if st.button("生成概括"):
-            st.chat_message("assistant").write(f"正在生成文章概括")
-
-            # 生成概括
-            try:
-                summary = summarizer.summarize(docs)
-            except Exception as e:
-                st.error(f"Error during summarization: {e}")
-            
-            # 在聊天界面上显示模型的输出
-            st.chat_message("assistant").write(summary)
 
         # 接收用户问题
         if query := st.text_input("Ask questions about your file"):
