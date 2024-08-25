@@ -171,13 +171,19 @@ def main():
         # 使用侧边栏显示对话历史和用户输入
         st.sidebar.header("Chat History")
 
-        # 创建一个固定位置的容器用于输入框
-        input_container = st.sidebar.container()
-
         # 初始化对话历史
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
+        # 显示对话历史
+        for message in st.session_state.messages:
+            with st.sidebar:
+                if message["role"] == "user":
+                    st.markdown(f"> **User:** {message['content']}")
+                else:
+                    st.markdown(f"> **Assistant:** {message['content']}")
+
+        # 将输入框放在对话历史之后
         query = st.sidebar.text_input("Ask questions about your file", key="query")
 
         if query:
@@ -190,14 +196,6 @@ def main():
 
             # 清空输入框
             query = ""
-
-        # 显示对话历史
-        for message in st.session_state.messages:
-            with st.sidebar:
-                if message["role"] == "user":
-                    st.markdown(f"> **User:** {message['content']}")
-                else:
-                    st.markdown(f"> **Assistant:** {message['content']}")
 
 if __name__ == '__main__':
     main()
