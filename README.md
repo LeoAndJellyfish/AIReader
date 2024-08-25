@@ -30,11 +30,9 @@ streamlit run app_gpu.py --server.address 127.0.0.1 --server.port 6006
 ```
 
 # TODO
-- [ ] 微调模型
 - [x] 用langchain重构代码
 - [x] 改进概括算法实现
-- [ ] 改进概括性能
-- [ ] 改进用户页面
+- [x] 改进用户页面
 - [ ] 关闭后删除临时文件
 
 # 链接
