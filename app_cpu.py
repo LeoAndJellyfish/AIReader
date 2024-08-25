@@ -163,32 +163,29 @@ def main():
             loader = TextLoader(temp_file_path)
         docs = loader.load()
 
-        # 使用container来控制整体布局
-        container = st.container()
-        with container:
-            # 显示文档内容和问答界面
-            col1, col2 = st.columns([2, 1])  # 第一列宽一些显示文档内容，第二列窄一些显示问答界面
+        # 显示文档内容在主页面
+        st.subheader("Document Content:")
+        for doc in docs:
+            st.write(doc.page_content)
 
-            # 显示文档内容在左侧
-            with col1:
-                st.subheader("Document Content:")
-                for doc in docs:
-                    st.write(doc.page_content)
+        # 使用侧边栏显示对话历史
+        st.sidebar.header("Chat History")
+        messages = st.sidebar.empty()
 
-            # 接收用户问题
-            with col2:
-                query = st.text_input("Ask questions about your file")
+        # 接收用户问题
+        query = st.text_input("Ask questions about your file")
 
-                if query:
-                    # 检索 + 生成回复
-                    chunks, response = chatbot.run(docs, query)
+        if query:
+            # 检索 + 生成回复
+            chunks, response = chatbot.run(docs, query)
 
-                    # 在聊天界面上显示模型的输出
-                    st.chat_message("assistant").write(f"正在检索相关信息")
-                    st.chat_message("assistant").write(chunks)
+            # 更新侧边栏的对话历史
+            with messages:
+                # 显示用户的提问
+                st.write(f"You: {query}")
 
-                    st.chat_message("assistant").write(f"正在生成回复")
-                    st.chat_message("assistant").write(response)
+                # 显示模型的输出
+                st.write(f"Assistant: {response}")
 
 if __name__ == '__main__':
     main()
