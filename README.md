@@ -1,4 +1,4 @@
-# Yuan2.0 AIReader（在建）
+# Yuan2.0 AIReader（短期内不再开发）
 AIReader 是一个基于Yuan2.0的文章阅读助手，它可以帮助用户快速阅读文章，并回答相关问题。
 
 # 部署流程
@@ -33,7 +33,7 @@ streamlit run app_gpu.py --server.address 127.0.0.1 --server.port 6006
 - [x] 用langchain重构代码
 - [x] 改进概括算法实现
 - [x] 改进用户页面
-- [ ] 关闭后删除临时文件
+- [o] 关闭后删除临时文件
 
 # 链接
 体验demo：https://www.modelscope.cn/studios/leo12QWER/AIReader
